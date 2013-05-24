@@ -1,11 +1,12 @@
 /**
  ******************************************************************************
- * @addtogroup TauLabsSystem Tau Labs System
+ * @addtogroup OpenPilot System OpenPilot System
  * @{
- * @addtogroup TauLabsLibraries Tau Labs System Libraries
+ * @addtogroup OpenPilot Libraries OpenPilot System Libraries
  * @{
  * @file       sanitycheck.c
- * @author     Tau Labs, http://github.com/TauLabs, Copyright (C) 2012-2013
+ * @author     PhoenixPilot, http://github.com/PhoenixPilot Copyright (C) 2012-2013.
+ * @author     The OpenPilot Team, http://www.openpilot.org Copyright (C) 2012.
  * @brief      Utilities to validate a flight configuration
  * @see        The GNU Public License (GPL) Version 3
  *
@@ -143,7 +144,6 @@ int32_t configuration_check()
 				}
 				break;
 			case MANUALCONTROLSETTINGS_FLIGHTMODEPOSITION_PATHPLANNER:
-			case MANUALCONTROLSETTINGS_FLIGHTMODEPOSITION_TABLETCONTROL:
 				if (coptercontrol) {
 					error_code = SYSTEMALARMS_CONFIGERROR_PATHPLANNER;
 				}

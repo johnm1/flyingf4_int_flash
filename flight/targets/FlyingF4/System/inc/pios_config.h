@@ -2,7 +2,7 @@
  ******************************************************************************
  * @file       pios_config.h
  * @author     The OpenPilot Team, http://www.openpilot.org Copyright (C) 2010.
- * @author     Tau Labs, http://www.taulabs.org, Copyright (C) 2012-2013
+ * @author     PhoenixPilot, http://github.com/PhoenixPilot, Copyright (C) 2012
  * @addtogroup OpenPilotSystem OpenPilot System
  * @{
  * @addtogroup OpenPilotCore OpenPilot Core
@@ -46,7 +46,7 @@
 #define PIOS_INCLUDE_IAP
 #define PIOS_INCLUDE_TIM
 #define PIOS_INCLUDE_SERVO
-#define PIOS_INCLUDE_SPI
+//#define PIOS_INCLUDE_SPI
 #define PIOS_INCLUDE_SYS
 #define PIOS_INCLUDE_USART
 #define PIOS_INCLUDE_USB
@@ -58,17 +58,16 @@
 #define PIOS_INCLUDE_WDG
 
 /* Select the sensors to include */
-#define PIOS_INCLUDE_HMC5883
+//#define PIOS_INCLUDE_HMC5883
 //#define PIOS_HMC5883_HAS_GPIOS
 #define PIOS_INCLUDE_MPU6050
 #define PIOS_MPU6050_ACCEL
-#define PIOS_INCLUDE_MS5611
+//#define PIOS_INCLUDE_MS5611
 #define FLASH_FREERTOS
 /* Com systems to include */
 #define PIOS_INCLUDE_COM
 #define PIOS_INCLUDE_COM_TELEM
 #define PIOS_INCLUDE_COM_FLEXI
-#define PIOS_INCLUDE_MAVLINK
 
 #define PIOS_INCLUDE_GPS
 #define PIOS_INCLUDE_GPS_NMEA_PARSER
@@ -85,7 +84,7 @@
 
 #define PIOS_INCLUDE_SETTINGS
 #define PIOS_INCLUDE_FLASH
-/* A really shitty setting saving implementation */
+#define PIOS_INCLUDE_FLASH_INTERNAL
 #define PIOS_INCLUDE_FLASH_SECTOR_SETTINGS
 
 /* Other Interfaces */

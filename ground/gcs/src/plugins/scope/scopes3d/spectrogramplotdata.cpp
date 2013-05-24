@@ -151,10 +151,10 @@ bool SpectrogramData::append(UAVObject* multiObj)
 
 
         // Get list of object instances
-        QVector<UAVObject*> list = objManager->getObjectInstances(multiObj->getName());
+        QList<UAVObject*> list = objManager->getObjectInstances(multiObj->getName());
 
         // Remove a row's worth of data.
-        unsigned int spectrogramWidth = list.size();
+        unsigned int spectrogramWidth = list.length();
 
         // Check that there is a full window worth of data. While GCS is starting up, the size of
         // multiple instance UAVOs is 1, so it's possible for spurious data to come in before

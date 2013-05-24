@@ -25,6 +25,7 @@
  */
 #include "pathplannerplugin.h"
 #include "pathplannergadgetfactory.h"
+#include <QDebug>
 #include <QtPlugin>
 #include <QStringList>
 #include <extensionsystem/pluginmanager.h>

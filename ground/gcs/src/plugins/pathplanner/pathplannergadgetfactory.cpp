@@ -27,6 +27,7 @@
 #include "pathplannergadgetwidget.h"
 #include "pathplannergadget.h"
 #include <coreplugin/iuavgadget.h>
+#include <QDebug>
 
 PathPlannerGadgetFactory::PathPlannerGadgetFactory(QObject *parent) :
         IUAVGadgetFactory(QString("PathPlannerGadget"),

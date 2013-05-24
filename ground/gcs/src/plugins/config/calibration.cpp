@@ -58,7 +58,7 @@ enum calibrationSuccessMessages{
 
 #define sign(x) ((x < 0) ? -1 : 1)
 
-Calibration::Calibration() : calibrateMags(false), accelLength(GRAVITY),
+Calibration::Calibration() : calibrateMag(false), accelLength(GRAVITY),
     xCurve(NULL), yCurve(NULL), zCurve(NULL)
 {
 }
@@ -68,13 +68,11 @@ Calibration::~Calibration()
 }
 
 /**
- * @brief Calibration::initialize Configure whether to calibrate the magnetometer
- * and/or accelerometer during 6-point calibration
+ * @brief Calibration::initialize Configure whether to calibrate the mag during 6 point cal
  * @param calibrateMags
  */
-void Calibration::initialize(bool calibrateAccels, bool calibrateMags) {
-    this->calibrateAccels = calibrateAccels;
-    this->calibrateMags = calibrateMags;
+void Calibration::initialize(bool calibrateMags) {
+    this->calibrateMag = calibrateMags;
 }
 
 /**
@@ -265,10 +263,9 @@ void Calibration::dataUpdated(UAVObject * obj) {
         // for the accel and optionally the mag.
         if(storeSixPointMeasurement(obj,6)) {
             // All data collected.  Disconnect and reset all UAVOs, and compute value
+            connectSensor(ACCEL, false);
             connectSensor(GYRO, false);
-            if (calibrateAccels)
-                connectSensor(ACCEL, false);
-            if (calibrateMags)
+            if (calibrateMag)
                 connectSensor(MAG, false);
             getObjectUtilManager()->setAllNonSettingsMetadata(originalMetaData);
 
@@ -280,28 +277,8 @@ void Calibration::dataUpdated(UAVObject * obj) {
 
             // Do calculation
             int ret=computeScaleBias();
-            if (ret==CALIBRATION_SUCCESS) {
-                // Load calibration results
-                SensorSettings * sensorSettings = SensorSettings::GetInstance(getObjectManager());
-                SensorSettings::DataFields sensorSettingsData = sensorSettings->getData();
-
-
-                // Generate result messages
-                QString accelCalibrationResults = "";
-                QString magCalibrationResults = "";
-                if (calibrateAccels == true) {
-                    accelCalibrationResults = QString(tr("Accelerometer bias, in [m/s^2]: x=%1, y=%2, z=%3\n")).arg(sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_X], -9).arg(sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Y], -9).arg(sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Z], -9) +
-                                              QString(tr("Accelerometer scale, in [-]:    x=%1, y=%2, z=%3\n")).arg(sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_X], -9).arg(sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Y], -9).arg(sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Z], -9);
-
-                }
-                if (calibrateMags == true) {
-                    magCalibrationResults = QString(tr("Magnetometer bias, in [mG]: x=%1, y=%2, z=%3\n")).arg(sensorSettingsData.MagBias[SensorSettings::MAGBIAS_X], -9).arg(sensorSettingsData.MagBias[SensorSettings::MAGBIAS_Y], -9).arg(sensorSettingsData.MagBias[SensorSettings::MAGBIAS_Z], -9) +
-                                            QString(tr("Magnetometer scale, in [-]: x=%4, y=%5, z=%6")).arg(sensorSettingsData.MagScale[SensorSettings::MAGSCALE_X], -9).arg(sensorSettingsData.MagScale[SensorSettings::MAGSCALE_Y], -9).arg(sensorSettingsData.MagScale[SensorSettings::MAGSCALE_Z], -9);
-                }
-
-                // Emit SIGNAL containing calibration success message
-                emit showSixPointMessage(QString(tr("Calibration succeeded")) + QString("\n") + accelCalibrationResults + QString("\n") + magCalibrationResults);
-            }
+            if (ret==CALIBRATION_SUCCESS)
+                emit showSixPointMessage(tr("Calibration succeeded"));
             else{
                 //Return sensor calibration values to their original settings
                 resetSensorCalibrationToOriginalValues();
@@ -371,10 +348,9 @@ void Calibration::timeout()
     case SIX_POINT_COLLECT4:
     case SIX_POINT_COLLECT5:
     case SIX_POINT_COLLECT6:
+        connectSensor(ACCEL, false);
         connectSensor(GYRO, false);
-        if (calibrateAccels)
-            connectSensor(ACCEL, false);
-        if (calibrateMags)
+        if (calibrateMag)
             connectSensor(MAG, false);
         calibration_state = IDLE;
         emit showSixPointMessage(tr("Six point data collection timed out"));
@@ -427,8 +403,8 @@ void Calibration::doStartLeveling() {
 
     // Set all UAVObject rates to update slowly
     UAVObjectManager *objManager = getObjectManager();
-    QVector< QVector<UAVDataObject*> > objList = objManager->getDataObjects();
-    foreach (QVector<UAVDataObject*> list, objList) {
+    QList< QList<UAVDataObject*> > objList = objManager->getDataObjects();
+    foreach (QList<UAVDataObject*> list, objList) {
         foreach (UAVDataObject* obj, list) {
             if(!obj->isSettings()) {
                 UAVObject::Metadata mdata = obj->getMetadata();
@@ -480,31 +456,28 @@ void Calibration::doStartSixPoint()
     attitudeSettingsData.BoardRotation[AttitudeSettings::BOARDROTATION_YAW]  =0;
     attitudeSettings->setData(attitudeSettingsData);
 
-    // Save initial sensor settings
+    // Save initial accelerometer settings
     SensorSettings * sensorSettings = SensorSettings::GetInstance(getObjectManager());
     Q_ASSERT(sensorSettings);
     SensorSettings::DataFields sensorSettingsData = sensorSettings->getData();
 
-    // If calibrating the accelerometer, remove any scaling
-    if (calibrateAccels) {
-        initialAccelsScale[0]=sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_X];
-        initialAccelsScale[1]=sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Y];
-        initialAccelsScale[2]=sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Z];
-        initialAccelsBias[0]=sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_X];
-        initialAccelsBias[1]=sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Y];
-        initialAccelsBias[2]=sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Z];
+    initialAccelsScale[0]=sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_X];
+    initialAccelsScale[1]=sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Y];
+    initialAccelsScale[2]=sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Z];
+    initialAccelsBias[0]=sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_X];
+    initialAccelsBias[1]=sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Y];
+    initialAccelsBias[2]=sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Z];
 
-        // Reset the scale and bias to get a correct result
-        sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_X] = 1.0;
-        sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Y] = 1.0;
-        sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Z] = 1.0;
-        sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_X] = 0.0;
-        sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Y] = 0.0;
-        sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Z] = 0.0;
-    }
+    // Reset the scale and bias to get a correct result
+    sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_X] = 1.0;
+    sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Y] = 1.0;
+    sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Z] = 1.0;
+    sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_X] = 0.0;
+    sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Y] = 0.0;
+    sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Z] = 0.0;
 
-    // If calibrating the magnetometer, remove any scaling
-    if (calibrateMags) {
+    // If calibrating the mag, remove any scaling
+    if (calibrateMag) {
         initialMagsScale[0]=sensorSettingsData.MagScale[SensorSettings::MAGSCALE_X];
         initialMagsScale[1]=sensorSettingsData.MagScale[SensorSettings::MAGSCALE_Y];
         initialMagsScale[2]=sensorSettingsData.MagScale[SensorSettings::MAGSCALE_Z];
@@ -539,8 +512,8 @@ void Calibration::doStartSixPoint()
 
     // Make all UAVObject rates update slowly
     UAVObjectManager *objManager = getObjectManager();
-    QVector< QVector<UAVDataObject*> > objList = objManager->getDataObjects();
-    foreach (QVector<UAVDataObject*> list, objList) {
+    QList< QList<UAVDataObject*> > objList = objManager->getDataObjects();
+    foreach (QList<UAVDataObject*> list, objList) {
         foreach (UAVDataObject* obj, list) {
             if(!obj->isSettings()) {
                 UAVObject::Metadata mdata = obj->getMetadata();
@@ -553,10 +526,10 @@ void Calibration::doStartSixPoint()
     }
 
     // Connect sensors and set higher update rate
-    if (calibrateAccels)
-        connectSensor(ACCEL, true);
-    if(calibrateMags)
+    connectSensor(ACCEL, true);
+    if(calibrateMag) {
         connectSensor(MAG, true);
+    }
 
     // Set new metadata
     getObjectUtilManager()->setAllNonSettingsMetadata(metaDataList);
@@ -578,11 +551,10 @@ void Calibration::doCancelSixPoint(){
     resetSensorCalibrationToOriginalValues();
 
     // Disconnect sensors and reset UAVO update rates
-    if (calibrateAccels)
-        connectSensor(ACCEL, false);
-    if(calibrateMags)
+    connectSensor(ACCEL, false);
+    if(calibrateMag) {
         connectSensor(MAG, false);
-
+    }
     getObjectUtilManager()->setAllNonSettingsMetadata(originalMetaData);
 
     calibration_state = IDLE;
@@ -806,10 +778,12 @@ bool Calibration::storeLevelingMeasurement(UAVObject *obj) {
         double cP = cos(psi);
         double sP = sin(psi);
 
-
-        // the inversion of the rotation matrix multiplied by the basis vector
-        theta = atan2(-(cP * a_sensor[0] + sP * a_sensor[1]), -a_sensor[2]);
-        phi = atan2(-(sP * a_sensor[0] - cP * a_sensor[1]), -a_sensor[2] / cos(theta));
+        // In case psi is too small, we have to use a different equation to solve for theta
+        if (fabs(psi) > M_PI / 2)
+            theta = atanf((a_sensor[1] + cP * (sP * a_sensor[0] - cP * a_sensor[1])) / (sP * a_sensor[2]));
+        else
+            theta = atanf((a_sensor[0] - sP * (sP * a_sensor[0] - cP * a_sensor[1])) / (cP * a_sensor[2]));
+        phi = atan2f((sP * a_sensor[0] - cP * a_sensor[1]) / (-GRAVITY), a_sensor[2] / cos(theta) / (-GRAVITY));
 
         attitudeSettingsData.BoardRotation[AttitudeSettings::BOARDROTATION_ROLL] = phi * RAD2DEG * 100.0;
         attitudeSettingsData.BoardRotation[AttitudeSettings::BOARDROTATION_PITCH] = theta * RAD2DEG * 100.0;
@@ -868,7 +842,7 @@ bool Calibration::storeSixPointMeasurement(UAVObject * obj, int position)
     Q_ASSERT(position >= 1 && position <= 6);
     position --;
 
-    if( calibrateAccels && obj->getObjID() == Accels::OBJID ) {
+    if( obj->getObjID() == Accels::OBJID ) {
         Accels * accels = Accels::GetInstance(getObjectManager());
         Q_ASSERT(accels);
         Accels::DataFields accelsData = accels->getData();
@@ -878,7 +852,7 @@ bool Calibration::storeSixPointMeasurement(UAVObject * obj, int position)
         accel_accum_z.append(accelsData.z);
     }
 
-    if( calibrateMags && obj->getObjID() == Magnetometer::OBJID) {
+    if( calibrateMag && obj->getObjID() == Magnetometer::OBJID) {
         Magnetometer * mag = Magnetometer::GetInstance(getObjectManager());
         Q_ASSERT(mag);
         Magnetometer::DataFields magData = mag->getData();
@@ -888,32 +862,21 @@ bool Calibration::storeSixPointMeasurement(UAVObject * obj, int position)
         mag_accum_z.append(magData.z);
     }
 
-    // Update progress bar
-    float progress_percentage;
-    if(calibrateAccels && !calibrateMags)
-        progress_percentage = (float) accel_accum_x.size() / NUM_SENSOR_UPDATES_SIX_POINT * 100;
-    else if(!calibrateAccels && calibrateMags)
-        progress_percentage = (float) mag_accum_x.size() / NUM_SENSOR_UPDATES_SIX_POINT * 100;
-    else
-        progress_percentage = fminf(mag_accum_x.size(), accel_accum_x.size()) / NUM_SENSOR_UPDATES_SIX_POINT * 100;
-    emit sixPointProgressChanged(progress_percentage);
+    emit sixPointProgressChanged((float) accel_accum_x.size() / NUM_SENSOR_UPDATES_SIX_POINT * 100);
 
     // If enough data is collected, average it for this position
-    if((!calibrateAccels || accel_accum_x.size() >= NUM_SENSOR_UPDATES_SIX_POINT) &&
-            (!calibrateMags || mag_accum_x.size() >= NUM_SENSOR_UPDATES_SIX_POINT)) {
+    if(accel_accum_x.size() >= NUM_SENSOR_UPDATES_SIX_POINT &&
+            (!calibrateMag || mag_accum_x.size() >= NUM_SENSOR_UPDATES_SIX_POINT)) {
 
-        // Store the average accelerometer value in that position
-        if (calibrateAccels) {
-            accel_data_x[position] = listMean(accel_accum_x);
-            accel_data_y[position] = listMean(accel_accum_y);
-            accel_data_z[position] = listMean(accel_accum_z);
-            accel_accum_x.clear();
-            accel_accum_y.clear();
-            accel_accum_z.clear();
-        }
+        // Store the average accel value in that position
+        accel_data_x[position] = listMean(accel_accum_x);
+        accel_data_y[position] = listMean(accel_accum_y);
+        accel_data_z[position] = listMean(accel_accum_z);
+        accel_accum_x.clear();
+        accel_accum_y.clear();
+        accel_accum_z.clear();
 
-        // Store the average magnetometer value in that position
-        if (calibrateMags) {
+        if (calibrateMag) {
             mag_data_x[position] = listMean(mag_accum_x);
             mag_data_y[position] = listMean(mag_accum_y);
             mag_data_z[position] = listMean(mag_accum_z);
@@ -1195,10 +1158,6 @@ double Calibration::listMax(QList<double> list)
   */
 int Calibration::computeScaleBias()
 {
-    SensorSettings * sensorSettings = SensorSettings::GetInstance(getObjectManager());
-    Q_ASSERT(sensorSettings);
-    SensorSettings::DataFields sensorSettingsData = sensorSettings->getData();
-
     // Regardless of calibration result, set board rotations back to user settings
     AttitudeSettings * attitudeSettings = AttitudeSettings::GetInstance(getObjectManager());
     Q_ASSERT(attitudeSettings);
@@ -1210,58 +1169,51 @@ int Calibration::computeScaleBias()
 
     bool good_calibration = true;
 
+    qDebug() << "Accel measurements";
+    for(int i = 0; i < 6; i++)
+        qDebug() << accel_data_x[i] << ", " << accel_data_y[i] << ", " << accel_data_z[i] << ";";
+    qDebug() << "Mag measurements";
+    for(int i = 0; i < 6; i++)
+        qDebug() << mag_data_x[i] << ", " << mag_data_y[i] << ", " << mag_data_z[i] << ";";
+
+    // Calibrate accelerometer
+    double S[3], b[3];
+    SixPointInConstFieldCal(accelLength, accel_data_x, accel_data_y, accel_data_z, S, b);
+
+    SensorSettings * sensorSettings = SensorSettings::GetInstance(getObjectManager());
+    Q_ASSERT(sensorSettings);
+    SensorSettings::DataFields sensorSettingsData = sensorSettings->getData();
+
     //Assign calibration data
-    if (calibrateAccels) {
-        good_calibration = true;
+    sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_X] += (-sign(S[0]) * b[0]);
+    sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Y] += (-sign(S[1]) * b[1]);
+    sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Z] += (-sign(S[2]) * b[2]);
 
-        qDebug() << "Accel measurements";
-        for(int i = 0; i < 6; i++)
-            qDebug() << accel_data_x[i] << ", " << accel_data_y[i] << ", " << accel_data_z[i] << ";";
+    sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_X] *= fabs(S[0]);
+    sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Y] *= fabs(S[1]);
+    sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Z] *= fabs(S[2]);
 
-        // Solve for accelerometer calibration
-        double S[3], b[3];
-        SixPointInConstFieldCal(accelLength, accel_data_x, accel_data_y, accel_data_z, S, b);
+    // Check the accel calibration is good
+    good_calibration &= sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_X] ==
+            sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_X];
+    good_calibration &= sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Y] ==
+            sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Y];
+    good_calibration &= sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Z] ==
+            sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Z];
+    good_calibration &= (sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_X] ==
+                         sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_X]);
+    good_calibration &= (sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Y] ==
+                         sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Y]);
+    good_calibration &= (sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Z] ==
+                         sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Z]);
 
-        sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_X] += (-sign(S[0]) * b[0]);
-        sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Y] += (-sign(S[1]) * b[1]);
-        sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Z] += (-sign(S[2]) * b[2]);
-
-        sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_X] *= fabs(S[0]);
-        sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Y] *= fabs(S[1]);
-        sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Z] *= fabs(S[2]);
-
-        // Check the accel calibration is good
-        good_calibration &= sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_X] ==
-                sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_X];
-        good_calibration &= sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Y] ==
-                sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Y];
-        good_calibration &= sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Z] ==
-                sensorSettingsData.AccelScale[SensorSettings::ACCELSCALE_Z];
-        good_calibration &= (sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_X] ==
-                             sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_X]);
-        good_calibration &= (sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Y] ==
-                             sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Y]);
-        good_calibration &= (sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Z] ==
-                             sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Z]);
-
-        //This can happen if, for instance, HomeLocation.g_e == 0
-        if((S[0]+S[1]+S[2])<0.0001){
-            good_calibration=false;
-        }
-
-        if (good_calibration) {
-            qDebug()<<  "Accel bias: " << sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_X] << " " << sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Y] << " " << sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Z];
-        } else {
-            return ACCELEROMETER_FAILED;
-        }
+    //This can happen if, for instance, HomeLocation.g_e == 0
+    if((S[0]+S[1]+S[2])<0.0001){
+        good_calibration=false;
     }
 
-    if (calibrateMags) {
+    if (calibrateMag) {
         good_calibration = true;
-
-        qDebug() << "Mag measurements";
-        for(int i = 0; i < 6; i++)
-            qDebug() << mag_data_x[i] << ", " << mag_data_y[i] << ", " << mag_data_z[i] << ";";
 
         // Work out the average vector length as nominal since mag scale normally close to 1
         // and we don't use the magnitude anyway.  Avoids requiring home location.
@@ -1279,7 +1231,7 @@ int Calibration::computeScaleBias()
         }
         len /= 6;
 
-        // Solve for magnetometer calibration
+        // Calibrate magnetomter
         double S[3], b[3];
         SixPointInConstFieldCal(len, mag_data_x, mag_data_y, mag_data_z, S, b);
 
@@ -1317,8 +1269,13 @@ int Calibration::computeScaleBias()
         }
     }
 
-    // If we've made it this far, it's because good_calibration == true
-    sensorSettings->setData(sensorSettingsData);
+    // Apply at the end so only applies if it works and mag does too
+    if (good_calibration) {
+        qDebug()<<  "Accel bias: " << sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_X] << " " << sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Y] << " " << sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Z];
+        sensorSettings->setData(sensorSettingsData);
+    } else {
+        return ACCELEROMETER_FAILED;
+    }
 
     // Inform the system that the calibration process has completed
     emit calibrationCompleted();
@@ -1356,7 +1313,7 @@ void Calibration::resetSensorCalibrationToOriginalValues()
     sensorSettingsData.AccelBias[SensorSettings::ACCELBIAS_Z]=initialAccelsBias[2];
 
 
-    if (calibrateMags) {
+    if (calibrateMag) {
         //Write the original magnetometer values back to the device
         sensorSettingsData.MagScale[SensorSettings::MAGSCALE_X]=initialMagsScale[0];
         sensorSettingsData.MagScale[SensorSettings::MAGSCALE_Y]=initialMagsScale[1];

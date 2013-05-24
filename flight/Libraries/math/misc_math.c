@@ -1,8 +1,8 @@
 /**
  ******************************************************************************
  * @file       math_misc.c
- * @author     Tau Labs, http://github.com/TauLabs, Copyright (C) 2012-2013
- * @addtogroup TauLabsMath Math Utilities
+ * @author     PhoenixPilot, http://github.com/PhoenixPilot, Copyright (C) 2012
+ * @addtogroup OpenPilot Math Utilities
  * @{
  * @addtogroup MiscellaneousMath Math Various mathematical routines
  * @{
@@ -26,7 +26,6 @@
 
 #include <math.h>
 #include "misc_math.h" 		/* API declarations */
-#include "physical_constants.h"
 
 /**
  * Bound input value between min and max
@@ -49,10 +48,10 @@ float bound_sym(float val, float range)
 }
 
 /**
- * Circular modulus [degrees].  Compute the equivalent angle between [-180,180]
+ * Circular modulus.  Compute the equivalent angle between [-180,180]
  * for the input angle.  This is useful taking the difference between
  * two headings and working out the relative rotation to get there quickest.
- * @param[in] err input value in degrees.
+ * @param[in] err error in degrees.
  * @returns The equivalent angle between -180 and 180
  */
 float circular_modulus_deg(float err)
@@ -71,26 +70,3 @@ float circular_modulus_deg(float err)
 
 }
 
-
-/**
- * Circular modulus [radians].  Compute the equivalent angle between [-pi,pi]
- * for the input angle.  This is useful taking the difference between
- * two headings and working out the relative rotation to get there quickest.
- * @param[in] err input value in radians.
- * @returns The equivalent angle between -pi and pi
- */
-float circular_modulus_rad(float err)
-{
-	float val = fmodf(err + PI, 2*PI);
-
-	// fmodf converts negative values into the negative remainder
-	// so we must add 360 to make sure this ends up correct and
-	// behaves like positive output modulus
-	if (val < 0)
-		val += PI;
-	else
-		val -= PI;
-
-	return val;
-
-}

@@ -83,16 +83,14 @@ void UavTalkRelay::newConnection()
     uavTalkList.append(uav);
     connect(clientConnection, SIGNAL(disconnected()),
             uav, SLOT(deleteLater()));
-    QVector< QVector<UAVObject*> > list = m_ObjMngr->getObjects();
-    QVector< QVector<UAVObject*> >::const_iterator i;
-    QVector<UAVObject*>::const_iterator j;
+    QList< QList<UAVObject*> > list;
+    list = m_ObjMngr->getObjects();
+    QList< QList<UAVObject*> >::const_iterator i;
+    QList<UAVObject*>::const_iterator j;
     int objects = 0;
-
-    const QVector< QVector<UAVObject*> >::iterator iEnd = list.end();
-    for (i = list.constBegin(); i != iEnd; ++i)
+    for (i = list.constBegin(); i != list.constEnd(); ++i)
     {
-        QVector<UAVObject*>::const_iterator jEnd = (*i).constEnd();
-        for (j = (*i).constBegin(); j != jEnd; ++j)
+        for (j = (*i).constBegin(); j != (*i).constEnd(); ++j)
         {
             connect(*j, SIGNAL(objectUpdated(UAVObject*)), uav.data(), SLOT(sendObjectSlot(UAVObject*)));
             objects++;

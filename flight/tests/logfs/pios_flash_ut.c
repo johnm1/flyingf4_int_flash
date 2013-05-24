@@ -4,7 +4,6 @@
 #include <string.h>		/* memset */
 
 #include <stdbool.h>
-#include "FreeRTOS.h"
 #include "pios_flash_ut_priv.h"
 
 enum flash_ut_magic {
@@ -20,7 +19,7 @@ struct flash_ut_dev {
 
 static struct flash_ut_dev * PIOS_Flash_UT_Alloc(void)
 {
-	struct flash_ut_dev * flash_dev = pvPortMalloc(sizeof(struct flash_ut_dev));
+	struct flash_ut_dev * flash_dev = malloc(sizeof(struct flash_ut_dev));
 
 	flash_dev->magic = FLASH_UT_MAGIC;
 
@@ -104,7 +103,7 @@ static int32_t PIOS_Flash_UT_EraseSector(uintptr_t flash_id, uint32_t addr)
 		assert(0);
 	}
 
-	unsigned char * buf = pvPortMalloc(flash_dev->cfg->size_of_sector);
+	unsigned char * buf = malloc(flash_dev->cfg->size_of_sector);
 	assert (buf);
 	memset((void *)buf, 0xFF, flash_dev->cfg->size_of_sector);
 

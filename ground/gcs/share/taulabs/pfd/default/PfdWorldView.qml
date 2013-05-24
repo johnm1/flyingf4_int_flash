@@ -33,6 +33,17 @@ Item {
         ]
 
         SvgElementImage {
+            id: pitch_scale
+            elementName: "pitch_scale"
+            //worldView is loaded with Loader, so background element is visible
+            sceneSize: background.sceneSize
+            anchors.centerIn: parent
+            border: 64 //sometimes numbers are excluded from bounding rect
+
+            smooth: true
+        }
+
+        SvgElementImage {
             id: horizont_line
             elementName: "world-centerline"
             //worldView is loaded with Loader, so background element is visible

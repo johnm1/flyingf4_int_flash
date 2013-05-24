@@ -8,7 +8,7 @@
  *
  * @file       pios_usb.c
  * @author     The OpenPilot Team, http://www.openpilot.org Copyright (C) 2010.
- * @author     Tau Labs, http://github.com/TauLabs, Copyright (C) 2012-2013
+ * @author     PhoenixPilot, http://github.com/PhoenixPilot, Copyright (C) 2012
  * @brief      USB device functions (STM32 dependent code)
  * @see        The GNU Public License (GPL) Version 3
  *

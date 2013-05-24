@@ -7,7 +7,6 @@
  *
  * @file       pios_config.h
  * @author     The OpenPilot Team, http://www.openpilot.org Copyright (C) 2010.
- * @author     Tau Labs, http://www.taulabs.org, Copyright (C) 2013
  * @brief      PiOS configuration header.
  *             Central compile time config for the project.
  *             In particular, pios_config.h is where you define which PiOS libraries
@@ -37,13 +36,10 @@
 /* Enable/Disable PiOS Modules */
 #define PIOS_INCLUDE_ADC
 #define PIOS_INCLUDE_DELAY
-#if defined(USE_I2C)
-#define PIOS_INCLUDE_I2C
+//#if defined(USE_I2C)
+//#define PIOS_INCLUDE_I2C
 //#define PIOS_INCLUDE_I2C_ESC
-#endif
-#if defined(USE_PCF8591)
-#define PIOS_INCLUDE_PCF8591
-#endif
+//#endif
 #define PIOS_INCLUDE_IRQ
 #define PIOS_INCLUDE_LED
 #define PIOS_INCLUDE_IAP
@@ -106,7 +102,6 @@
 #define PIOS_STABILIZATION_STACK_SIZE   524
 #define PIOS_TELEM_STACK_SIZE           500
 #define PIOS_EVENTDISPATCHER_STACK_SIZE 130
-#define PIOS_MAVLINK_STACK_SIZE         600
 #define IDLE_COUNTS_PER_SEC_AT_NO_LOAD 1995998
 //#define PIOS_QUATERNION_STABILIZATION
 

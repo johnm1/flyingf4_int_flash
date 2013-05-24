@@ -1,7 +1,7 @@
 ###############################################################################
 # @file       Makefile
 # @author     The OpenPilot Team, http://www.openpilot.org, Copyright (C) 2009.
-# @author     Tau Labs, http://www.taulabs.org, Copyright (C) 2012-2013
+# @author     PhoenixPilot, http://github.com/PhoenixPilot, Copyright (C) 2012
 # @addtogroup 
 # @{
 # @addtogroup 
@@ -52,9 +52,8 @@ OPTMODULES += CameraStab
 OPTMODULES += Autotune
 OPTMODULES += TxPID
 OPTMODULES += VibrationAnalysis
-OPTMODULES += UAVOMavlinkBridge
 #OPTMODULES += Battery
-OPTMODULES += ComUsbBridge
+#OPTMODULES += ComUsbBridge
 
 # Paths
 OPSYSTEM = ./System
@@ -81,7 +80,6 @@ DEBUG_CM3_DIR_INC = $(DEBUG_CM3_DIR)/inc
 OPUAVOBJINC = $(OPUAVOBJ)/inc
 FLIGHTPLANLIB = $(OPMODULEDIR)/FlightPlan/lib
 FLIGHTPLANS = $(OPMODULEDIR)/FlightPlan/flightplans
-MAVLINKINC = $(FLIGHTLIB)/mavlink/v1.0/common
 
 # optional component libraries
 include $(PIOSCOMMONLIB)/FreeRTOS/library.mk
@@ -170,7 +168,6 @@ EXTRAINCDIRS += $(CMSISDIR)
 EXTRAINCDIRS += $(BOOTINC)
 EXTRAINCDIRS += $(HWDEFSINC)
 EXTRAINCDIRS += $(DEBUG_CM3_DIR_INC)
-EXTRAINCDIRS += $(MAVLINKINC)
 
 EXTRAINCDIRS += ${foreach MOD, ${MODULES} ${OPTMODULES}, $(OPMODULEDIR)/${MOD}/inc} ${OPMODULEDIR}/System/inc
 
@@ -204,7 +201,7 @@ CFLAGS += -Os
 endif
 
 
-
+   
 # common architecture-specific flags from the device-specific library makefile
 CFLAGS += $(ARCHFLAGS)
 CFLAGS += -DDIAGNOSTICS

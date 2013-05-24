@@ -2,7 +2,7 @@
  ******************************************************************************
  * @file       pios_config.h
  * @author     The OpenPilot Team, http://www.openpilot.org Copyright (C) 2010.
- * @author     Tau Labs, http://www.taulabs.org, Copyright (C) 2012-2013
+ * @author     PhoenixPilot, http://github.com/PhoenixPilot, Copyright (C) 2012
  * @addtogroup OpenPilotSystem OpenPilot System
  * @{
  * @addtogroup OpenPilotCore OpenPilot Core
@@ -36,7 +36,7 @@
 #define PIOS_INCLUDE_BL_HELPER
 
 /* Enable/Disable PiOS Modules */
-#define PIOS_INCLUDE_DMA_CB_SUBSCRIBING_FUNCTION
+//#define PIOS_INCLUDE_ADC
 #define PIOS_INCLUDE_DELAY
 #define PIOS_INCLUDE_I2C
 #define PIOS_I2C_DIAGNOSTICS
@@ -66,7 +66,6 @@
 #define PIOS_INCLUDE_COM_TELEM
 #define PIOS_INCLUDE_TELEMETRY_RF
 #define PIOS_INCLUDE_COM_FLEXI
-#define PIOS_INCLUDE_MAVLINK
 
 #define PIOS_INCLUDE_GPS
 #define PIOS_INCLUDE_GPS_NMEA_PARSER
@@ -80,6 +79,7 @@
 #define PIOS_INCLUDE_PPM
 #define PIOS_INCLUDE_PWM
 #define PIOS_INCLUDE_GCSRCVR
+
 #define PIOS_INCLUDE_SETTINGS
 #define PIOS_INCLUDE_FLASH
 #define PIOS_INCLUDE_FLASH_INTERNAL

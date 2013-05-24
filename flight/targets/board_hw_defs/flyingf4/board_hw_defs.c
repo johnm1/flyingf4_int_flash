@@ -2,10 +2,10 @@
  ******************************************************************************
  * @file       board_hw_defs.c
  * @author     The OpenPilot Team, http://www.openpilot.org Copyright (C) 2012.
- * @author     Tau Labs, http://github.com/TauLabs, Copyright (C) 2012-2013
- * @addtogroup TauLabsSystem Tau Labs System
+ * @author     PhoenixPilot, http://github.com/PhoenixPilot, Copyright (C) 2012
+ * @addtogroup OpenPilotSystem OpenPilot System
  * @{
- * @addtogroup TauLabsCore Tau Labs Core
+ * @addtogroup OpenPilotCore OpenPilot Core
  * @{
  * @brief Defines board specific static initializers for hardware for the FlyingF4 board.
  *****************************************************************************/
@@ -232,41 +232,29 @@ void PIOS_SPI_flash_irq_handler(void)
 
 #endif	/* PIOS_INCLUDE_SPI */
 
-
 #if defined(PIOS_INCLUDE_FLASH)
 #include "pios_flashfs_logfs_priv.h"
-#include "pios_flash_jedec_priv.h"
+#include "pios_flash_internal_priv.h"
 
-static const struct flashfs_logfs_cfg flashfs_m25p_settings_cfg = {
-	.fs_magic      = 0x99abcedf,
-	.total_fs_size = 0x00100000, /* 1M bytes (16 sectors = half chip) */
-	.arena_size    = 0x00010000, /* 256 * slot size */
+static const struct pios_flash_internal_cfg flash_internal_cfg = {
+};
+
+static const struct flashfs_logfs_cfg flashfs_internal_cfg = {
+	.fs_magic      = 0x99abcfef,
+	.total_fs_size = 0x00008000, //EE_BANK_SIZE, /* 32K bytes (2x16KB sectors) */
+	.arena_size    = 0x00004000, /* 64 * slot size = 16K bytes = 1 sector */
 	.slot_size     = 0x00000100, /* 256 bytes */
 
-	.start_offset  = 0,	     /* start at the beginning of the chip */
-	.sector_size   = 0x00010000, /* 64K bytes */
-	.page_size     = 0x00000100, /* 256 bytes */
-};
-
-static const struct flashfs_logfs_cfg flashfs_m25p_waypoints_cfg = {
-	.fs_magic      = 0x99abcecf,
-	.total_fs_size = 0x00100000, /* 1M bytes (16 sectors = half chip) */
-	.arena_size    = 0x00010000, /* 2048 * slot size */
-	.slot_size     = 0x00000040, /* 64 bytes */
-
-	.start_offset  = 0x00100000, /* start after the settings partition */
-	.sector_size   = 0x00010000, /* 64K bytes */
-	.page_size     = 0x00000100, /* 256 bytes */
-};
-
-static const struct pios_flash_jedec_cfg flash_m25p_cfg = {
-	.sector_erase = 0xD8,
-	.chip_erase = 0xC7
+	.start_offset  = 0x08008000, //EE_BANK_BASE, /* start after the bootloader */
+	.sector_size   = 0x00004000, /* 16K bytes */
+	.page_size     = 0x00004000, /* 16K bytes */
 };
 
 #include "pios_flash.h"
 
-#endif
+#endif	/* PIOS_INCLUDE_FLASH */
+
+
 
 #if defined(PIOS_INCLUDE_I2C)
 

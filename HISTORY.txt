@@ -1,7 +1,4 @@
-﻿test push
-
-
-Short summary of changes.  For a complete list see the git log.
+﻿Short summary of changes.  For a complete list see the git log.
 
 2012-11-11
 [OP-691] Camera/accessory mixers won't be reset when a vehicle configuration changed.

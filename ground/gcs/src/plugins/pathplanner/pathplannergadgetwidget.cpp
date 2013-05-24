@@ -28,6 +28,7 @@
 #include "waypointdelegate.h"
 #include "ui_pathplanner.h"
 
+#include <QDebug>
 #include <QFileDialog>
 #include <QString>
 #include <QStringList>
@@ -36,10 +37,9 @@
 #include <QtGui/QVBoxLayout>
 #include <QtGui/QPushButton>
 
-#include "algorithms/pathfillet.h"
 #include "extensionsystem/pluginmanager.h"
 
-PathPlannerGadgetWidget::PathPlannerGadgetWidget(QWidget *parent) : QLabel(parent), prevModel(NULL)
+PathPlannerGadgetWidget::PathPlannerGadgetWidget(QWidget *parent) : QLabel(parent)
 {
     ui = new Ui_PathPlanner();
     ui->setupUi(this);
@@ -141,39 +141,6 @@ void PathPlannerGadgetWidget::on_tbFetchFromUAV_clicked()
 {
     proxy->objectsToModel();
     ui->tableView->resizeColumnsToContents();
-}
-
-/**
- * @brief PathPlannerGadgetWidget::on_tbFilletPath_clicked Apply fillets to the current path
- */
-void PathPlannerGadgetWidget::on_tbFilletPath_clicked()
-{
-    // Create a copy of the model before filleting
-    if (!prevModel)
-        prevModel = new FlightDataModel(this);
-    Q_ASSERT(prevModel);
-    if (prevModel)
-        prevModel->replaceData(model);
-
-    IPathAlgorithm * algo = new PathFillet(this);
-    // Only process is successfully configured and the verification of the model succeeds
-    QString err;
-    if(algo->configure(this) && algo->verifyPath(model, err)) {
-        // If unsuccessful delete the cached model
-        if (!algo->processPath(model)) {
-            delete prevModel;
-            prevModel = NULL;
-        }
-    }
-}
-
-/**
- * @brief PathPlannerGadgetWidget::on_tbFilletPath_clicked Apply fillets to the current path
- */
-void PathPlannerGadgetWidget::on_tbUnfilletPath_clicked()
-{
-    if (prevModel)
-        model->replaceData(prevModel);
 }
 
 /**

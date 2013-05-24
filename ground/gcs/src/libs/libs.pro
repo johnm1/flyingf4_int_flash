@@ -10,11 +10,8 @@ SUBDIRS   = \
     opmapcontrol \
     qwt \
     qextserialport \
+    sdlgamepad \
     libqxt
-
-!NO_SDL {
-SUBDIRS += sdlgamepad
-}
 
 !LIGHTWEIGHT_GCS {
 SUBDIRS += glc_lib

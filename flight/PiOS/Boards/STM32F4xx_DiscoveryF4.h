@@ -2,7 +2,7 @@
  ******************************************************************************
  * @file       pios_board.h
  * @author     The OpenPilot Team, http://www.openpilot.org Copyright (C) 2012.
- * @author     Tau Labs, http://github.com/TauLabs, Copyright (C) 2012-2013
+ * @author     PhoenixPilot, http://github.com/PhoenixPilot, Copyright (C) 2012
  * @addtogroup 
  * @{
  * @addtogroup 
@@ -203,8 +203,8 @@ extern uintptr_t pios_com_telem_usb_id;
 
 //-------------------------
 // ADC
+// None.
 //-------------------------
-#define PIOS_ADC_SUB_DRIVER_MAX_INSTANCES       3
 
 //-------------------------
 // USB

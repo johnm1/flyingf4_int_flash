@@ -62,6 +62,7 @@
 #define TASK_PRIORITY (tskIDLE_PRIORITY+2)
 #define VISUALIZATION_PERIOD 20
 
+#define PI_MOD(x) (fmod(x + PI, PI * 2) - PI)
 // Private types
 
 // Private variables

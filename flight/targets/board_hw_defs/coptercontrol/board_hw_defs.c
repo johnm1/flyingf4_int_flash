@@ -2,10 +2,10 @@
  ******************************************************************************
  * @file       board_hw_defs.c
  * @author     The OpenPilot Team, http://www.openpilot.org Copyright (C) 2012.
- * @author     Tau Labs, http://github.com/TauLabs, Copyright (C) 2012-2013
- * @addtogroup TauLabsSystem Tau Labs System
+ * @author     PhoenixPilot, http://github.com/PhoenixPilot, Copyright (C) 2012
+ * @addtogroup OpenPilotSystem OpenPilot System
  * @{
- * @addtogroup TauLabsCore Tau Labs Core
+ * @addtogroup OpenPilotCore OpenPilot Core
  * @{
  * @brief Defines board specific static initializers for hardware for the CopterControl board.
  *****************************************************************************/
@@ -449,12 +449,11 @@ static const struct pios_flash_jedec_cfg flash_m25p_cfg = {
  * ADC system
  */
 #if defined(PIOS_INCLUDE_ADC)
-#include "pios_internal_adc_priv.h"
+#include "pios_adc_priv.h"
 extern void PIOS_ADC_handler(void);
-
 void DMA1_Channel1_IRQHandler() __attribute__ ((alias("PIOS_ADC_handler")));
 // Remap the ADC DMA handler to this one
-static const struct pios_internal_adc_cfg internal_adc_cfg = {
+static const struct pios_adc_cfg pios_adc_cfg = {
 	.dma = {
 		.ahb_clk  = RCC_AHBPeriph_DMA1,
 		.irq = {
@@ -483,11 +482,10 @@ static const struct pios_internal_adc_cfg internal_adc_cfg = {
 	}, 
 	.half_flag = DMA1_IT_HT1,
 	.full_flag = DMA1_IT_TC1,
-	.oversampling = ((PIOS_ADC_RATE / 1000.0f) * PIOS_INTERNAL_ADC_UPDATE_RATE),
 };
 
 void PIOS_ADC_handler() {
-	PIOS_INTERNAL_ADC_DMA_Handler();
+	PIOS_ADC_DMA_Handler();
 }
 #endif
 
@@ -1078,12 +1076,6 @@ static const struct pios_sbus_cfg pios_sbus_cfg = {
 
 #endif	/* PIOS_INCLUDE_COM */
 
-#if defined(PIOS_INCLUDE_ADC)
-
-#include "pios_adc_priv.h"
-
-#endif	/* PIOS_INCLUDE_ADC */
-
 #if defined(PIOS_INCLUDE_RTC)
 /*
  * Realtime Clock (RTC)
@@ -1203,17 +1195,6 @@ const struct pios_pwm_cfg pios_pwm_with_ppm_cfg = {
 
 #if defined(PIOS_INCLUDE_I2C)
 
-#if defined(PIOS_INCLUDE_PCF8591)
-#include "pios_pcf8591_adc_priv.h"
-static const struct pios_pcf8591_adc_cfg pios_8591_cfg = {
-		.i2c_address = PIOS_PCF8591_DEFAULT_ADDRESS,
-		.use_auto_increment = false,
-		.enable_dac = false,
-		.adc_input_type = PIOS_PCF8591_ADC_SINGLE_ENDED,
-
-};
-#endif
-
 #include <pios_i2c_priv.h>
 
 /*
@@ -1233,11 +1214,7 @@ static const struct pios_i2c_adapter_cfg pios_i2c_flexi_adapter_cfg = {
     .I2C_Ack                 = I2C_Ack_Enable,
     .I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit,
     .I2C_DutyCycle           = I2C_DutyCycle_2,
-#if defined (PIOS_INCLUDE_PCF8591)
-    .I2C_ClockSpeed          = 100000,	/* bits/s */
-#else
     .I2C_ClockSpeed          = 400000,	/* bits/s */
-#endif
   },
   .transfer_timeout_ms = 50,
   .scl = {

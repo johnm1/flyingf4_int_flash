@@ -1,7 +1,7 @@
 /**
  ******************************************************************************
  * @file       pios_flash.h
- * @author     Tau Labs, http://github.com/TauLabs, Copyright (C) 2012-2013
+ * @author     PhoenixPilot, http://github.com/PhoenixPilot, Copyright (C) 2012
  * @addtogroup PIOS PIOS Core hardware abstraction layer
  * @{
  * @addtogroup PIOS_FLASH Flash Driver API Definition

@@ -1,7 +1,7 @@
 ###############################################################################
 # @file       Makefile
 # @author     The OpenPilot Team, http://www.openpilot.org, Copyright (C) 2009.
-# @author     Tau Labs, http://github.com/TauLabs, Copyright (C) 2012-2013
+# @author     PhoenixPilot, http://github.com/PhoenixPilot, Copyright (C) 2012
 # @addtogroup 
 # @{
 # @addtogroup 
@@ -68,13 +68,6 @@ USE_ALTITUDE ?= NO
 USE_AUTOTUNE ?= YES
 TEST_FAULTS ?= NO
 USE_UAVOMAVLINKBRIDGE ?= YES
-USE_PCF8591 ?= NO
-ifeq ($(USE_PCF8591), YES)
-ifeq ($(USE_I2C), NO)
-$(error "PCF8591 driver requires i2c (USE_I2C=YES)")
-endif
-endif
-USE_BATTERY ?= NO
 # @endgroup  Optional modules
 
 # List of optional modules to include
@@ -107,9 +100,7 @@ endif
 ifeq ($(USE_UAVOMAVLINKBRIDGE), YES)
 OPTMODULES += UAVOMavlinkBridge
 endif
-ifeq ($(USE_BATTERY), YES)
-OPTMODULES += Battery
-endif
+
 # List of mandatory modules to include
 ifeq ($(NAVIGATION), YES)
 MODULES += State/coptercontrol
@@ -242,8 +233,6 @@ SRC += $(OPUAVSYNTHDIR)/airspeedactual.c
 SRC += $(OPUAVSYNTHDIR)/sensorsettings.c
 SRC += $(OPUAVSYNTHDIR)/flightbatterystate.c
 SRC += $(OPUAVSYNTHDIR)/flightbatterysettings.c
-SRC += $(OPUAVSYNTHDIR)/adcrouting.c
-
 endif
 
 ## PIOS Hardware (STM32F10x)
@@ -252,7 +241,7 @@ SRC += $(PIOSSTM32F10X)/pios_led.c
 SRC += $(PIOSSTM32F10X)/pios_delay.c
 SRC += $(PIOSSTM32F10X)/pios_usart.c
 SRC += $(PIOSSTM32F10X)/pios_irq.c
-SRC += $(PIOSSTM32F10X)/pios_internal_adc.c
+SRC += $(PIOSSTM32F10X)/pios_adc.c
 SRC += $(PIOSSTM32F10X)/pios_servo.c
 SRC += $(PIOSSTM32F10X)/pios_i2c.c
 SRC += $(PIOSSTM32F10X)/pios_spi.c
@@ -293,10 +282,6 @@ SRC += $(PIOSCOMMON)/pios_sbus.c
 SRC += $(PIOSCOMMON)/pios_sensors.c
 SRC += $(PIOSCOMMON)/pios_gcsrcvr.c
 SRC += $(PIOSCOMMON)/printf-stdarg.c
-SRC += $(PIOSCOMMON)/pios_adc.c
-ifeq ($(USE_PCF8591), YES)
-SRC += $(PIOSCOMMON)/pios_pcf8591_adc.c
-endif
 ## Libraries for flight calculations
 SRC += $(FLIGHTLIB)/fifo_buffer.c
 SRC += $(FLIGHTLIB)/CoordinateConversions.c
@@ -491,10 +476,6 @@ endif
 
 ifeq ($(USE_I2C), YES)
 CDEFS += -DUSE_I2C
-endif
-
-ifeq ($(USE_PCF8591), YES)
-CDEFS += -DUSE_PCF8591
 endif
 
 # Declare all non-optional modules as built-in to force inclusion, strip off any appended varieties of module

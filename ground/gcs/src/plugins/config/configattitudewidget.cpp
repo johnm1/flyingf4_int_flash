@@ -77,9 +77,7 @@ public:
 
 ConfigAttitudeWidget::ConfigAttitudeWidget(QWidget *parent) :
     ConfigTaskWidget(parent),
-    m_ui(new Ui_AttitudeWidget()),
-    board_has_accelerometer(false),
-    board_has_magnetometer(false)
+    m_ui(new Ui_AttitudeWidget())
 {
     m_ui->setupUi(this);
 
@@ -224,15 +222,15 @@ ConfigAttitudeWidget::ConfigAttitudeWidget(QWidget *parent) :
     baro->setPos(startX,startY);
     baro->setTransform(QTransform::fromScale(1,0),true);
 
+    bool full_hardware = false;
+
     ExtensionSystem::PluginManager *pm = ExtensionSystem::PluginManager::instance();
     UAVObjectUtilManager* utilMngr = pm->getObject<UAVObjectUtilManager>();
     Q_ASSERT(utilMngr);
     if (utilMngr != NULL) {
         Core::IBoardType *board = utilMngr->getBoardType();
-        if (board != NULL) {
-            board_has_accelerometer = board->queryCapabilities(Core::IBoardType::BOARD_CAPABILITIES_ACCELS);
-            board_has_magnetometer = board->queryCapabilities(Core::IBoardType::BOARD_CAPABILITIES_MAGS);
-        }
+        if (board != NULL)
+            full_hardware = board->queryCapabilities(Core::IBoardType::BOARD_CAPABILITIES_MAGS);
         else
             qDebug() << "Board not found";
     }
@@ -241,32 +239,22 @@ ConfigAttitudeWidget::ConfigAttitudeWidget(QWidget *parent) :
     // will be dealing with some null pointers
     addUAVObject("AttitudeSettings");
     addUAVObject("SensorSettings");
-    if (board_has_magnetometer) {
+    if (full_hardware) {
         addUAVObject("INSSettings");
     }
     autoLoadWidgets();
 
     // Configure the calibration object
-    calibration.initialize(board_has_accelerometer, board_has_magnetometer);
-
-    // Configure the calibration UI
-    m_ui->cbCalibrateAccels->setChecked(board_has_accelerometer);
-    m_ui->cbCalibrateMags->setChecked(board_has_magnetometer);
-    if (!board_has_accelerometer || !board_has_magnetometer) { // If both are not available, don't provide any choices.
-        m_ui->cbCalibrateAccels->setEnabled(false);
-        m_ui->cbCalibrateMags->setEnabled(false);
-    }
+    calibration.initialize(full_hardware);
 
     // Must connect the graphs to the calibration object to see the calibration results
     calibration.configureTempCurves(m_ui->xGyroTemp, m_ui->yGyroTemp, m_ui->zGyroTemp);
 
     // Connect the signals
     connect(m_ui->accelBiasStart, SIGNAL(clicked()), &calibration, SLOT(doStartLeveling()));
-    connect(m_ui->sixPointStart, SIGNAL(clicked()), &calibration, SLOT(doStartSixPoint()));
-    connect(m_ui->sixPointSave, SIGNAL(clicked()), &calibration, SLOT(doSaveSixPointPosition()));
-    connect(m_ui->sixPointCancel, SIGNAL(clicked()), &calibration, SLOT(doCancelSixPoint()));
-    connect(m_ui->cbCalibrateAccels, SIGNAL(clicked()), this, SLOT(configureSixPoint()));
-    connect(m_ui->cbCalibrateMags, SIGNAL(clicked()), this, SLOT(configureSixPoint()));
+    connect(m_ui->sixPointStart, SIGNAL(clicked()), &calibration ,SLOT(doStartSixPoint()));
+    connect(m_ui->sixPointSave, SIGNAL(clicked()), &calibration ,SLOT(doSaveSixPointPosition()));
+    connect(m_ui->sixPointCancel, SIGNAL(clicked()), &calibration ,SLOT(doCancelSixPoint()));
     connect(m_ui->startTempCal, SIGNAL(clicked()), &calibration, SLOT(doStartTempCal()));
     connect(m_ui->acceptTempCal, SIGNAL(clicked()), &calibration, SLOT(doAcceptTempCal()));
     connect(m_ui->cancelTempCal, SIGNAL(clicked()), &calibration, SLOT(doCancelTempCalPoint()));
@@ -402,8 +390,8 @@ void ConfigAttitudeWidget::doStartNoiseMeasurement()
     // Iterate over list of UAVObjects, configuring all dynamic data metadata objects.
     UAVObjectManager *objManager = getObjectManager();
     QMap<QString, UAVObject::Metadata> metaDataList;
-    QVector< QVector<UAVDataObject*> > objList = objManager->getDataObjects();
-    foreach (QVector<UAVDataObject*> list, objList) {
+    QList< QList<UAVDataObject*> > objList = objManager->getDataObjects();
+    foreach (QList<UAVDataObject*> list, objList) {
         foreach (UAVDataObject* obj, list) {
             if(!obj->isSettings()) {
                 UAVObject::Metadata mdata = obj->getMetadata();
@@ -612,17 +600,6 @@ void ConfigAttitudeWidget::refreshWidgetsValues(UAVObject *)
 void ConfigAttitudeWidget::do_SetDirty()
 {
     setDirty(true);
-}
-
-
-void ConfigAttitudeWidget::configureSixPoint()
-{
-    if (!m_ui->cbCalibrateAccels->isChecked() && !m_ui->cbCalibrateMags->isChecked()) {
-        QMessageBox::information(this, "No sensors chosen", "At least one of the sensors must be chosen. \n\nResetting six-point sensor calibration selection.");
-        m_ui->cbCalibrateAccels->setChecked(true && board_has_accelerometer);
-        m_ui->cbCalibrateMags->setChecked(true && board_has_magnetometer);
-    }
-    calibration.initialize(m_ui->cbCalibrateMags->isChecked(), m_ui->cbCalibrateAccels->isChecked());
 }
 
 

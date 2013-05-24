@@ -77,9 +77,8 @@ void TelemetryMonitor::startRetrievingObjects()
     // Clear object queue
     queue.clear();
     // Get all objects, add metaobjects, settings and data objects with OnChange update mode to the queue
-    QVector< QVector<UAVObject*> > objs = objMngr->getObjects();
-    const int objsSize = objs.size();
-    for (int n = 0; n < objsSize; ++n)
+    QList< QList<UAVObject*> > objs = objMngr->getObjects();
+    for (int n = 0; n < objs.length(); ++n)
     {
         UAVObject* obj = objs[n][0];
         UAVMetaObject* mobj = dynamic_cast<UAVMetaObject*>(obj);

@@ -399,10 +399,12 @@ uint32_t *ptr = &_irq_stack_end;
 	if (*(volatile uint32_t *)((uint32_t)ptr + IRQSTACK_LIMIT_CRITICAL) != pattern)
 	{
 		i = IRQSTACK_LIMIT_CRITICAL - 1;
+	
 	}
 	else if (*(volatile uint32_t *)((uint32_t)ptr + IRQSTACK_LIMIT_WARNING) != pattern)
 	{
 		i = IRQSTACK_LIMIT_WARNING - 1;
+	
 	}
 	else
 	{
@@ -442,20 +444,14 @@ static void updateStats()
 	portTickType now = xTaskGetTickCount();
 	if (now > lastTickCount) {
 		uint32_t dT = (xTaskGetTickCount() - lastTickCount) * portTICK_RATE_MS;	// in ms
-
-		// In the case of a slightly miscalibrated max idle count, make sure CPULoad does
-		// not go negative and set an alarm inappropriately.
-		float idleFraction = ((float)idleCounter / ((float)dT / 1000.0f)) / (float)IDLE_COUNTS_PER_SEC_AT_NO_LOAD;
-		if (idleFraction > 1)
-			stats.CPULoad = 0;
-		else
-			stats.CPULoad = 100 - roundf(100.0f * idleFraction);
+		stats.CPULoad =
+			100 - (uint8_t) roundf(100.0f * ((float)idleCounter / ((float)dT / 1000.0f)) / (float)IDLE_COUNTS_PER_SEC_AT_NO_LOAD);
 	} //else: TickCount has wrapped, do not calc now
 	lastTickCount = now;
 	idleCounterClear = 1;
 	
 #if defined(PIOS_INCLUDE_ADC) && defined(PIOS_ADC_USE_TEMP_SENSOR)
-	float temp_voltage = 3.3 * PIOS_ADC_DevicePinGet(PIOS_INTERNAL_ADC, 0) / ((1 << 12) - 1);
+	float temp_voltage = 3.3 * PIOS_ADC_PinGet(0) / ((1 << 12) - 1);
 	const float STM32_TEMP_V25 = 1.43; /* V */
 	const float STM32_TEMP_AVG_SLOPE = 4.3; /* mV/C */
 	stats.CPUTemp = (temp_voltage-STM32_TEMP_V25) * 1000 / STM32_TEMP_AVG_SLOPE + 25;
